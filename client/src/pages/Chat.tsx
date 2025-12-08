@@ -1,17 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Send, MoreVertical, Phone, Video, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Send, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { MOCK_USERS, MOCK_MESSAGES, Message } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
+import { ConnectionKnot } from "@/components/ConnectionKnot";
+import { GradingModal } from "@/components/GradingModal";
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:id");
   const [, setLocation] = useLocation();
   const partnerId = params?.id;
   const partner = MOCK_USERS.find(u => u.id === partnerId);
+  const [showGrading, setShowGrading] = useState(false);
   
   // Initialize with mock messages for this conversation
   const [messages, setMessages] = useState<Message[]>(
@@ -54,36 +57,35 @@ export default function Chat() {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <header className="flex items-center gap-3 p-4 border-b bg-white/50 backdrop-blur-md sticky top-0 z-10">
-        <Button variant="ghost" size="icon" onClick={() => setLocation("/messages")}>
-          <ArrowLeft className="w-6 h-6" />
-        </Button>
-        
-        <div 
-          className="flex items-center gap-3 flex-1 cursor-pointer"
-          onClick={() => setLocation(`/user/${partnerId}`)}
-        >
-          <Avatar className="w-10 h-10 border border-primary/20">
-            <AvatarImage src={partner.avatar} className="object-cover" />
-            <AvatarFallback>{partner.name[0]}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1">
-              <h2 className="font-semibold truncate">{partner.name}</h2>
-              {partner.isVerified && <ShieldCheck className="w-3 h-3 text-blue-400" />}
+      <header className="bg-white/50 backdrop-blur-md sticky top-0 z-10 border-b">
+        <div className="flex items-center gap-3 p-4">
+          <Button variant="ghost" size="icon" onClick={() => setLocation("/messages")}>
+            <ArrowLeft className="w-6 h-6" />
+          </Button>
+          
+          <div 
+            className="flex items-center gap-3 flex-1 cursor-pointer"
+            onClick={() => setLocation(`/user/${partnerId}`)}
+          >
+            <Avatar className="w-10 h-10 border border-primary/20">
+              <AvatarImage src={partner.avatar} className="object-cover" />
+              <AvatarFallback>{partner.name[0]}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1">
+                <h2 className="font-semibold truncate">{partner.name}</h2>
+                {partner.isVerified && <ShieldCheck className="w-3 h-3 text-blue-400" />}
+              </div>
+              <p className="text-xs text-muted-foreground truncate">Active now</p>
             </div>
-            <p className="text-xs text-muted-foreground truncate">Active now</p>
           </div>
         </div>
 
-        <div className="flex gap-1">
-          <Button variant="ghost" size="icon" className="text-muted-foreground">
-            <Phone className="w-5 h-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="text-muted-foreground">
-            <Video className="w-5 h-5" />
-          </Button>
-        </div>
+        {/* The Connection Knot Progress Bar */}
+        <ConnectionKnot 
+          messageCount={messages.length} 
+          onGradeUnlock={() => setShowGrading(true)}
+        />
       </header>
 
       {/* Messages Area */}
@@ -138,6 +140,19 @@ export default function Chat() {
           </Button>
         </div>
       </div>
+
+      {/* Grading Modal */}
+      {showGrading && (
+        <GradingModal 
+          isOpen={showGrading} 
+          onClose={() => setShowGrading(false)}
+          partnerName={partner.name}
+          onGrade={(grade) => {
+            alert(`Graded ${grade}/5! Connection strengthened.`);
+            setShowGrading(false);
+          }}
+        />
+      )}
     </div>
   );
 }
