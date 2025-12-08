@@ -24,6 +24,26 @@ export default function Chat() {
     ).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
   );
 
+  // Calculate conversation rounds (exchanges)
+  // A round is completed when the sender switches.
+  // Example: A -> B (1 round), B -> A (2 rounds), A -> A (2 rounds), A -> B (3 rounds)
+  const calculateRounds = (msgs: Message[]) => {
+    if (msgs.length === 0) return 0;
+    let rounds = 0;
+    let lastSenderId = msgs[0].senderId;
+    
+    // Start counting from the second message
+    for (let i = 1; i < msgs.length; i++) {
+      if (msgs[i].senderId !== lastSenderId) {
+        rounds++;
+        lastSenderId = msgs[i].senderId;
+      }
+    }
+    return rounds;
+  };
+
+  const rounds = calculateRounds(messages);
+
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -83,7 +103,7 @@ export default function Chat() {
 
         {/* The Connection Knot Progress Bar */}
         <ConnectionKnot 
-          messageCount={messages.length} 
+          messageCount={rounds} 
           onGradeUnlock={() => setShowGrading(true)}
         />
       </header>
