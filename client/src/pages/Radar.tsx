@@ -1,21 +1,38 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { MapPin, User, X, Heart } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { MapPin, X, Heart, Eye, EyeOff, Radio } from "lucide-react";
 import { NavBar } from "@/components/NavBar";
 import { MOCK_USERS } from "@/lib/mockData";
 
 export default function Radar() {
   const [isScanning, setIsScanning] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [foundMatch, setFoundMatch] = useState<string | null>(null);
+  
+  // Simulated location of the match relative to center (0,0)
+  const [matchPosition, setMatchPosition] = useState({ x: 0, y: 0 });
 
   const toggleScan = () => {
+    if (!isVisible) {
+      alert("You must be visible to scan for others.");
+      return;
+    }
+    
     setIsScanning(!isScanning);
     if (!isScanning) {
-      // Simulate finding a match after 3 seconds
+      // Simulate finding a match
       setTimeout(() => {
+        // Random position on the radar
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 80; // Fixed distance for UI consistency
+        setMatchPosition({
+          x: Math.cos(angle) * distance,
+          y: Math.sin(angle) * distance
+        });
         setFoundMatch("3"); // Taylor
       }, 3000);
     } else {
@@ -27,8 +44,8 @@ export default function Radar() {
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden flex flex-col">
-      {/* Map Background Placeholder - Abstract minimalist map */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none">
+      {/* Grid Background */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none">
         <svg width="100%" height="100%">
           <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
             <path d="M 40 0 L 0 0 0 40" fill="none" stroke="black" strokeWidth="0.5"/>
@@ -37,95 +54,164 @@ export default function Radar() {
         </svg>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center relative z-10 p-6">
-        <h1 className="text-2xl font-sans font-bold mb-2">String Radar</h1>
-        <p className="text-gray-500 text-sm mb-12 text-center max-w-[250px]">
-          Find strings that are physically close to you right now.
-        </p>
+      {/* Top Bar Controls */}
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-gray-100 shadow-sm">
+        <Label htmlFor="ghost-mode" className="text-xs font-medium cursor-pointer">
+          {isVisible ? "Visible" : "Ghost Mode"}
+        </Label>
+        <Switch 
+          id="ghost-mode" 
+          checked={isVisible} 
+          onCheckedChange={setIsVisible} 
+          className="scale-75"
+        />
+        {isVisible ? <Eye className="w-3 h-3 text-green-500" /> : <EyeOff className="w-3 h-3 text-gray-400" />}
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10 p-6 pb-24">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-serif font-bold mb-2 tracking-tight">String Radar</h1>
+          <p className="text-gray-400 text-xs uppercase tracking-widest">
+            {isScanning ? "Scanning frequencies..." : "Tap to scan area"}
+          </p>
+        </div>
 
         {/* Radar Visual */}
         <div className="relative w-80 h-80 flex items-center justify-center">
-          {/* Central User Node */}
-          <div className="w-4 h-4 bg-black rounded-full z-20 shadow-xl" />
           
-          {/* Pulse Rings */}
-          {isScanning && (
+          {/* Connection String (Visible when match found) */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
+            <AnimatePresence>
+              {foundMatch && (
+                <motion.path
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1.5, ease: "easeInOut" }}
+                  d={`M 160 160 Q ${160 + matchPosition.x / 2} ${160 + matchPosition.y / 2 + 50} ${160 + matchPosition.x} ${160 + matchPosition.y}`}
+                  stroke="hsl(var(--primary))" // Using the theme red color? No, let's use black for consistency or red for 'string'
+                  strokeWidth="2"
+                  fill="none"
+                  strokeDasharray="4 4"
+                  className="stroke-red-500"
+                />
+              )}
+            </AnimatePresence>
+          </svg>
+
+          {/* Central User Node */}
+          <div className="w-6 h-6 bg-black rounded-full z-20 shadow-xl border-4 border-white flex items-center justify-center">
+            <div className="w-2 h-2 bg-white rounded-full" />
+          </div>
+          
+          {/* Scanning Waves */}
+          {isScanning && !foundMatch && (
             <>
-              <motion.div
-                initial={{ scale: 0.2, opacity: 1 }}
-                animate={{ scale: 2, opacity: 0 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-                className="absolute w-full h-full border border-black/30 rounded-full"
-              />
-              <motion.div
-                initial={{ scale: 0.2, opacity: 1 }}
-                animate={{ scale: 2, opacity: 0 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 0.6 }}
-                className="absolute w-full h-full border border-black/30 rounded-full"
-              />
-              <motion.div
-                initial={{ scale: 0.2, opacity: 1 }}
-                animate={{ scale: 2, opacity: 0 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 1.2 }}
-                className="absolute w-full h-full border border-black/30 rounded-full"
-              />
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  initial={{ width: "20px", height: "20px", opacity: 0.8, borderWidth: "1px" }}
+                  animate={{ 
+                    width: "300px", 
+                    height: "300px", 
+                    opacity: 0,
+                    borderWidth: "0px"
+                  }}
+                  transition={{ 
+                    duration: 2.5, 
+                    repeat: Infinity, 
+                    delay: i * 0.8,
+                    ease: "easeOut" 
+                  }}
+                  className="absolute border border-black/40 rounded-full"
+                />
+              ))}
             </>
           )}
 
-          {/* Static Rings */}
-          <div className="absolute w-40 h-40 border border-black/5 rounded-full" />
-          <div className="absolute w-60 h-60 border border-black/5 rounded-full" />
-          <div className="absolute w-80 h-80 border border-black/5 rounded-full" />
+          {/* Found Match Node */}
+          <AnimatePresence>
+            {foundMatch && (
+              <motion.button
+                initial={{ scale: 0, opacity: 0, x: 0, y: 0 }}
+                animate={{ scale: 1, opacity: 1, x: matchPosition.x, y: matchPosition.y }}
+                exit={{ scale: 0, opacity: 0 }}
+                whileHover={{ scale: 1.2 }}
+                onClick={() => setFoundMatch(foundMatch)} // Re-trigger dialog if needed
+                className="absolute w-12 h-12 rounded-full border-2 border-white shadow-lg z-30 overflow-hidden cursor-pointer"
+              >
+                <img src={matchedUser?.avatar} alt="Match" className="w-full h-full object-cover" />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
+              </motion.button>
+            )}
+          </AnimatePresence>
+
+          {/* Static Decoration Rings */}
+          <div className="absolute w-40 h-40 border border-black/5 rounded-full pointer-events-none" />
+          <div className="absolute w-64 h-64 border border-black/5 rounded-full pointer-events-none" />
         </div>
 
-        <Button 
-          onClick={toggleScan}
-          className={`mt-12 rounded-full px-8 h-12 transition-all ${
-            isScanning 
-              ? "bg-red-50 text-red-500 hover:bg-red-100" 
-              : "bg-black text-white hover:bg-black/90"
-          }`}
-        >
-          {isScanning ? "Stop Scanning" : "Start Radar"}
-        </Button>
+        {/* Action Button */}
+        <div className="mt-16 relative">
+          <Button 
+            onClick={toggleScan}
+            size="lg"
+            className={`rounded-full w-20 h-20 shadow-2xl transition-all duration-500 ${
+              isScanning 
+                ? "bg-red-500 hover:bg-red-600 animate-pulse" 
+                : "bg-black hover:bg-black/90"
+            }`}
+          >
+            {isScanning ? (
+              <X className="w-8 h-8 text-white" />
+            ) : (
+              <Radio className="w-8 h-8 text-white" />
+            )}
+          </Button>
+        </div>
       </div>
 
-      {/* Match Found Modal */}
+      {/* Match Details Modal */}
       <AnimatePresence>
-        {matchedUser && (
-          <Dialog open={!!matchedUser} onOpenChange={() => setFoundMatch(null)}>
-            <DialogContent className="sm:max-w-md bg-white border-none shadow-2xl p-0 overflow-hidden rounded-3xl">
-              <div className="relative h-80">
+        {foundMatch && matchedUser && (
+          <Dialog open={!!foundMatch} onOpenChange={() => setFoundMatch(null)}>
+            <DialogContent className="sm:max-w-md bg-white border-none shadow-2xl p-0 overflow-hidden rounded-[2rem] m-4">
+              <div className="relative h-96">
                 <img 
                   src={matchedUser.avatar} 
                   alt={matchedUser.name}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
                 
-                <div className="absolute bottom-0 left-0 p-6 text-white w-full">
-                  <div className="flex items-center gap-2 mb-1">
-                    <MapPin className="w-4 h-4 text-green-400" />
-                    <span className="text-sm font-medium text-green-400">Nearby (50m)</span>
+                <div className="absolute bottom-0 left-0 p-8 text-white w-full">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="bg-green-500/20 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5 border border-green-500/30">
+                      <MapPin className="w-3 h-3 text-green-400" />
+                      <span className="text-xs font-bold text-green-400 tracking-wide">50 METERS AWAY</span>
+                    </div>
                   </div>
-                  <h2 className="text-3xl font-serif">{matchedUser.name}, {matchedUser.age}</h2>
-                  <p className="opacity-90 text-sm mt-2 line-clamp-2">{matchedUser.bio}</p>
+                  <h2 className="text-4xl font-serif mb-1">{matchedUser.name}, {matchedUser.age}</h2>
+                  <p className="text-white/80 text-sm leading-relaxed">{matchedUser.bio}</p>
                 </div>
 
                 <Button 
                   size="icon"
-                  className="absolute top-4 right-4 bg-white/20 backdrop-blur-md hover:bg-white/40 text-white border-0 rounded-full"
+                  className="absolute top-4 right-4 bg-black/20 backdrop-blur-md hover:bg-black/40 text-white border-0 rounded-full w-10 h-10"
                   onClick={() => setFoundMatch(null)}
                 >
                   <X className="w-5 h-5" />
                 </Button>
               </div>
 
-              <div className="p-4 flex gap-3">
-                 <Button className="flex-1 h-12 bg-black text-white hover:bg-black/90 rounded-xl">
-                   <Heart className="w-4 h-4 mr-2 fill-current" />
-                   Connect
+              <div className="p-6 bg-white space-y-3">
+                 <Button className="w-full h-14 bg-black text-white hover:bg-black/90 rounded-xl text-lg font-medium shadow-lg shadow-black/10">
+                   <Heart className="w-5 h-5 mr-2 fill-current text-red-500" />
+                   Send a String
                  </Button>
+                 <p className="text-center text-xs text-gray-400">
+                   They will only see this if they are also looking.
+                 </p>
               </div>
             </DialogContent>
           </Dialog>
