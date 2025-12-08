@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { MOCK_MATCHES, MOCK_USERS, MOCK_MESSAGES } from "@/lib/mockData";
 import { NavBar } from "@/components/NavBar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,6 +11,7 @@ import { GradingModal } from "@/components/GradingModal";
 import { Button } from "@/components/ui/button";
 
 export default function Messages() {
+  const [, setLocation] = useLocation();
   const [showPremium, setShowPremium] = useState(false);
   const [showGrading, setShowGrading] = useState<string | null>(null);
 
@@ -83,9 +84,8 @@ export default function Messages() {
               key={match.id}
               className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
               onClick={() => {
-                 if (match.messageCount >= 5 && !match.graded) {
-                   setShowGrading(match.id);
-                 }
+                // If we're clicking the message row, go to chat
+                 setLocation(`/chat/${partner.id}`);
               }}
             >
               <Avatar className="w-14 h-14">

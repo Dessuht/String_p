@@ -1,0 +1,143 @@
+import { useState, useRef, useEffect } from "react";
+import { useRoute, useLocation } from "wouter";
+import { ArrowLeft, Send, MoreVertical, Phone, Video, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { MOCK_USERS, MOCK_MESSAGES, Message } from "@/lib/mockData";
+import { cn } from "@/lib/utils";
+
+export default function Chat() {
+  const [, params] = useRoute("/chat/:id");
+  const [, setLocation] = useLocation();
+  const partnerId = params?.id;
+  const partner = MOCK_USERS.find(u => u.id === partnerId);
+  
+  // Initialize with mock messages for this conversation
+  const [messages, setMessages] = useState<Message[]>(
+    MOCK_MESSAGES.filter(m => 
+      (m.senderId === "me" && m.receiverId === partnerId) || 
+      (m.senderId === partnerId && m.receiverId === "me")
+    ).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+  );
+
+  const [newMessage, setNewMessage] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSend = () => {
+    if (!newMessage.trim()) return;
+
+    const msg: Message = {
+      id: Math.random().toString(),
+      senderId: "me",
+      receiverId: partnerId || "",
+      content: newMessage,
+      timestamp: new Date(),
+      isRead: false,
+      isRepliedTo: false,
+    };
+
+    setMessages([...messages, msg]);
+    setNewMessage("");
+  };
+
+  if (!partner) return <div>User not found</div>;
+
+  return (
+    <div className="flex flex-col h-screen bg-background">
+      {/* Header */}
+      <header className="flex items-center gap-3 p-4 border-b bg-white/50 backdrop-blur-md sticky top-0 z-10">
+        <Button variant="ghost" size="icon" onClick={() => setLocation("/messages")}>
+          <ArrowLeft className="w-6 h-6" />
+        </Button>
+        
+        <div 
+          className="flex items-center gap-3 flex-1 cursor-pointer"
+          onClick={() => setLocation(`/user/${partnerId}`)}
+        >
+          <Avatar className="w-10 h-10 border border-primary/20">
+            <AvatarImage src={partner.avatar} className="object-cover" />
+            <AvatarFallback>{partner.name[0]}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1">
+              <h2 className="font-semibold truncate">{partner.name}</h2>
+              {partner.isVerified && <ShieldCheck className="w-3 h-3 text-blue-400" />}
+            </div>
+            <p className="text-xs text-muted-foreground truncate">Active now</p>
+          </div>
+        </div>
+
+        <div className="flex gap-1">
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
+            <Phone className="w-5 h-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
+            <Video className="w-5 h-5" />
+          </Button>
+        </div>
+      </header>
+
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="text-center text-xs text-muted-foreground py-4">
+          You matched with {partner.name} on {new Date().toLocaleDateString()}
+        </div>
+        
+        {messages.map((msg) => {
+          const isMe = msg.senderId === "me";
+          return (
+            <div 
+              key={msg.id} 
+              className={cn(
+                "flex w-full",
+                isMe ? "justify-end" : "justify-start"
+              )}
+            >
+              <div 
+                className={cn(
+                  "max-w-[75%] px-4 py-2.5 rounded-2xl text-sm",
+                  isMe 
+                    ? "bg-primary text-primary-foreground rounded-br-sm" 
+                    : "bg-muted text-foreground rounded-bl-sm"
+                )}
+              >
+                {msg.content}
+              </div>
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area */}
+      <div className="p-4 bg-background border-t">
+        <div className="flex gap-2 items-center bg-muted/50 rounded-full px-4 py-2 border focus-within:border-primary/50 transition-colors">
+          <Input 
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            placeholder="Type a message..." 
+            className="border-none bg-transparent shadow-none focus-visible:ring-0 p-0 h-auto"
+          />
+          <Button 
+            size="icon" 
+            className="rounded-full w-8 h-8 shrink-0" 
+            onClick={handleSend}
+            disabled={!newMessage.trim()}
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

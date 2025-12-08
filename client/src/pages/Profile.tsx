@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ShieldCheck, Settings, Crown, Star } from "lucide-react";
 
+import { Link } from "wouter";
+
 export default function Profile() {
   const me = MOCK_USERS.find(u => u.id === "me");
 
@@ -20,13 +22,15 @@ export default function Profile() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="absolute top-4 right-4 rounded-full bg-background/50 backdrop-blur-md border-0 text-white"
-        >
-          <Settings className="w-5 h-5" />
-        </Button>
+        <Link href="/profile/edit">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="absolute top-4 right-4 rounded-full bg-background/50 backdrop-blur-md border-0 text-white"
+          >
+            <Settings className="w-5 h-5" />
+          </Button>
+        </Link>
       </div>
 
       <div className="px-6 -mt-12 relative z-10">
@@ -35,9 +39,11 @@ export default function Profile() {
             <img src={me.avatar} alt={me.name} className="w-full h-full object-cover" />
           </div>
           
-          <Button className="bg-primary hover:bg-primary/90 rounded-full px-6">
-            Edit Profile
-          </Button>
+          <Link href="/profile/edit">
+            <Button className="bg-primary hover:bg-primary/90 rounded-full px-6">
+              Edit Profile
+            </Button>
+          </Link>
         </div>
 
         <div className="space-y-1 mb-6">

@@ -13,6 +13,10 @@ import OnboardingSurvey from "@/pages/OnboardingSurvey";
 
 import Radar from "@/pages/Radar";
 
+import Chat from "@/pages/Chat";
+import UserProfile from "@/pages/UserProfile";
+import EditProfile from "@/pages/EditProfile";
+
 function Router() {
   return (
     <Switch>
@@ -21,7 +25,10 @@ function Router() {
       <Route path="/swipe" component={Swipe} />
       <Route path="/radar" component={Radar} />
       <Route path="/messages" component={Messages} />
+      <Route path="/chat/:id" component={Chat} />
+      <Route path="/user/:id" component={UserProfile} />
       <Route path="/profile" component={Profile} />
+      <Route path="/profile/edit" component={EditProfile} />
       <Route component={NotFound} />
     </Switch>
   );
