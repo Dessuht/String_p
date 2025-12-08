@@ -1,26 +1,21 @@
 import { useState, useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Star, Heart, MessageCircle } from "lucide-react";
+import { ShieldCheck, Star, Radio, MapPin } from "lucide-react";
 import { MOCK_USERS } from "@/lib/mockData";
 import { NavBar } from "@/components/NavBar";
 import { MatchOverlay } from "@/components/MatchOverlay";
+import { useLocation } from "wouter";
 
 export default function Swipe() {
   const [matchData, setMatchData] = useState<any>(null);
+  const [, setLocation] = useLocation();
   const me = MOCK_USERS.find(u => u.id === "me");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // We'll just show the mock users repeated to create a "feed" feel
-  const feedUsers = [...MOCK_USERS, ...MOCK_USERS, ...MOCK_USERS].filter(u => u.id !== "me");
-
-  const handleConnect = (user: any) => {
-    // Simulate match
-    setTimeout(() => {
-      setMatchData(user);
-    }, 500);
-  };
+  // Filter out "me" from the feed
+  const feedUsers = MOCK_USERS.filter(u => u.id !== "me");
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 relative overflow-hidden flex flex-col">
@@ -28,10 +23,10 @@ export default function Swipe() {
       <header className="px-6 pt-6 pb-2 flex justify-between items-end bg-background/80 backdrop-blur-md sticky top-0 z-30 border-b border-border/5">
         <div>
           <h1 className="text-3xl font-serif text-primary">The Thread</h1>
-          <p className="text-xs text-muted-foreground">Pull a string to connect</p>
+          <p className="text-xs text-muted-foreground">Follow the string to find your match</p>
         </div>
         <Badge variant="outline" className="border-primary/50 text-primary">
-          {feedUsers.length} Active Strings
+          {feedUsers.length} Nearby
         </Badge>
       </header>
 
@@ -58,49 +53,53 @@ export default function Swipe() {
             <div className="absolute left-0 top-12 w-8 h-0.5 bg-primary/20" />
 
             {/* Profile Card */}
-            <div className="bg-card rounded-3xl overflow-hidden shadow-sm border border-border/50 group">
+            <div className="bg-card rounded-3xl overflow-hidden shadow-sm border border-border/50 group relative">
               <div className="relative aspect-[4/5] md:aspect-video w-full overflow-hidden">
+                {/* Blurred Image */}
                 <img 
                   src={user.avatar} 
                   alt={user.name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-full object-cover blur-xl scale-110 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
                 
+                {/* Dark Overlay for text readability */}
+                <div className="absolute inset-0 bg-black/40" />
+                
+                {/* Center Action Button */}
+                <div className="absolute inset-0 flex items-center justify-center z-20">
+                   <Button 
+                     onClick={() => setLocation("/radar")}
+                     className="rounded-full h-16 px-8 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-2xl group-hover:scale-105 transition-all duration-300"
+                   >
+                     <Radio className="w-5 h-5 mr-2 animate-pulse text-primary" />
+                     <span className="font-semibold tracking-wide">Find to Tug</span>
+                   </Button>
+                </div>
+
                 {/* Overlay Info */}
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-10 pointer-events-none">
                   <div className="flex justify-between items-end">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <h2 className="text-3xl font-serif">{user.name}, {user.age}</h2>
                         {user.isVerified && <ShieldCheck className="w-5 h-5 text-blue-400" />}
                       </div>
-                      <p className="text-white/80 line-clamp-2 font-light">{user.bio}</p>
+                      <div className="flex items-center gap-2 text-white/70 text-sm mb-2">
+                         <MapPin className="w-3 h-3" />
+                         <span>{user.distance}m away</span>
+                      </div>
+                      <p className="text-white/80 line-clamp-2 font-light max-w-[80%]">{user.bio}</p>
                     </div>
-                    
-                    <Button 
-                      size="icon" 
-                      className="rounded-full w-14 h-14 bg-white text-black hover:bg-primary hover:text-white transition-colors shadow-xl"
-                      onClick={() => handleConnect(user)}
-                    >
-                      <Heart className="w-6 h-6 fill-current" />
-                    </Button>
                   </div>
                 </div>
 
                 {/* Top Right Stats */}
-                <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+                <div className="absolute top-4 right-4 flex flex-col gap-2 items-end z-10">
                    <div className="bg-black/30 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1 border border-white/10">
                      <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                      <span className="text-xs font-bold text-white">4.8</span>
                    </div>
                 </div>
-              </div>
-
-              {/* Quick Prompt/Icebreaker area (Optional expansion) */}
-              <div className="p-4 bg-muted/30 hidden">
-                 <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Icebreaker</p>
-                 <p className="text-sm">"What's the one thing you'd save in a fire?"</p>
               </div>
             </div>
           </motion.div>

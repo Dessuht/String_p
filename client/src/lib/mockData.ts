@@ -12,6 +12,7 @@ export interface User {
   isVerified: boolean;
   grades: number[]; // Last 3 grades (1-5)
   isPremium: boolean;
+  distance: number; // meters
 }
 
 export interface Message {
@@ -32,7 +33,7 @@ export interface Match {
   graded: boolean;
 }
 
-// Mock Database
+// Extended Mock Database
 export const MOCK_USERS: User[] = [
   {
     id: "1",
@@ -43,6 +44,7 @@ export const MOCK_USERS: User[] = [
     isVerified: true,
     grades: [4, 5, 5],
     isPremium: false,
+    distance: 120,
   },
   {
     id: "2",
@@ -53,6 +55,7 @@ export const MOCK_USERS: User[] = [
     isVerified: true,
     grades: [5, 4, 4],
     isPremium: true,
+    distance: 450,
   },
   {
     id: "3",
@@ -63,6 +66,62 @@ export const MOCK_USERS: User[] = [
     isVerified: false,
     grades: [3, 4, 3],
     isPremium: false,
+    distance: 80,
+  },
+  {
+    id: "4",
+    name: "Morgan",
+    age: 22,
+    bio: "Student by day, gamer by night. Let's coop?",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop&q=60",
+    isVerified: true,
+    grades: [5, 5, 5],
+    isPremium: false,
+    distance: 1200,
+  },
+  {
+    id: "5",
+    name: "Casey",
+    age: 29,
+    bio: "Chef who loves spicy food and bad puns.",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&auto=format&fit=crop&q=60",
+    isVerified: true,
+    grades: [4, 3, 5],
+    isPremium: true,
+    distance: 60,
+  },
+  {
+    id: "6",
+    name: "Riley",
+    age: 26,
+    bio: "Hiking, photography, and finding the perfect sunset.",
+    avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop&q=60",
+    isVerified: false,
+    grades: [2, 3, 4],
+    isPremium: false,
+    distance: 3000,
+  },
+  {
+    id: "7",
+    name: "Jamie",
+    age: 23,
+    bio: "Music producer. Always listening.",
+    avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop&q=60",
+    isVerified: true,
+    grades: [5, 5, 4],
+    isPremium: false,
+    distance: 15,
+  },
+  {
+    id: "8",
+    name: "Quinn",
+    age: 28,
+    bio: "Architect. I build things, including relationships.",
+    avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=800&auto=format&fit=crop&q=60",
+    isVerified: true,
+    grades: [4, 4, 4],
+    isPremium: true,
+    distance: 500,
   },
   {
     id: "me",
@@ -72,7 +131,8 @@ export const MOCK_USERS: User[] = [
     avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
     isVerified: true,
     grades: [5, 5, 4],
-    isPremium: true, // Making current user premium for demo purposes mostly
+    isPremium: true, 
+    distance: 0,
   }
 ];
 
