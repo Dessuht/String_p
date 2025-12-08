@@ -1,120 +1,113 @@
-import { useState } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { useState, useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, X, Heart, Star } from "lucide-react";
+import { ShieldCheck, Star, Heart, MessageCircle } from "lucide-react";
 import { MOCK_USERS } from "@/lib/mockData";
 import { NavBar } from "@/components/NavBar";
 import { MatchOverlay } from "@/components/MatchOverlay";
 
 export default function Swipe() {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [matchData, setMatchData] = useState<any>(null);
-  const x = useMotionValue(0);
-  const rotate = useTransform(x, [-200, 200], [-10, 10]);
-  const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
-
-  const currentUser = MOCK_USERS[currentIndex];
   const me = MOCK_USERS.find(u => u.id === "me");
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleSwipe = (direction: "left" | "right") => {
-    // Simulate a match logic: Every 2nd swipe right is a match for demo purposes
-    if (direction === "right" && Math.random() > 0.5) {
-      setTimeout(() => {
-        setMatchData(currentUser);
-      }, 300);
-    }
+  // We'll just show the mock users repeated to create a "feed" feel
+  const feedUsers = [...MOCK_USERS, ...MOCK_USERS, ...MOCK_USERS].filter(u => u.id !== "me");
 
+  const handleConnect = (user: any) => {
+    // Simulate match
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % MOCK_USERS.length);
-      x.set(0);
-    }, 200);
+      setMatchData(user);
+    }, 500);
   };
 
-  if (!currentUser) return null;
-
   return (
-    <div className="min-h-screen bg-background text-foreground pb-24 relative overflow-hidden">
-      {/* Decorative string background */}
-      <svg className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none z-0">
-        <path d="M-100,100 C200,300 400,0 600,200 S900,100 1200,400" stroke="hsl(var(--primary))" strokeWidth="2" fill="none" />
-        <path d="M-100,300 C100,100 500,500 800,200" stroke="hsl(var(--primary))" strokeWidth="1" fill="none" />
-      </svg>
+    <div className="min-h-screen bg-background text-foreground pb-24 relative overflow-hidden flex flex-col">
+      {/* Header */}
+      <header className="px-6 pt-6 pb-2 flex justify-between items-end bg-background/80 backdrop-blur-md sticky top-0 z-30 border-b border-border/5">
+        <div>
+          <h1 className="text-3xl font-serif text-primary">The Thread</h1>
+          <p className="text-xs text-muted-foreground">Pull a string to connect</p>
+        </div>
+        <Badge variant="outline" className="border-primary/50 text-primary">
+          {feedUsers.length} Active Strings
+        </Badge>
+      </header>
 
-      <div className="relative z-10 flex flex-col items-center pt-8 px-4 h-[85vh]">
-        <header className="w-full flex justify-between items-center mb-6 max-w-md">
-          <h1 className="text-3xl font-serif text-primary">String</h1>
-          <Badge variant="outline" className="border-primary/50 text-primary">
-            {MOCK_USERS.length} Potential Strings
-          </Badge>
-        </header>
+      {/* The Continuous Thread Visual */}
+      <div className="absolute left-6 top-0 bottom-0 w-1 bg-border/50 z-0 hidden md:block" /> 
+      {/* Mobile Thread Line (Left aligned) */}
+      <div className="fixed left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-primary/20 to-transparent z-0" />
 
-        <div className="relative w-full max-w-md flex-1 flex items-center justify-center">
-          <AnimatePresence>
-            <motion.div
-              key={currentUser.id}
-              style={{ x, rotate, opacity }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              onDragEnd={(e, { offset, velocity }) => {
-                if (offset.x > 100) handleSwipe("right");
-                else if (offset.x < -100) handleSwipe("left");
-              }}
-              className="absolute inset-0"
-            >
-              <Card className="h-full w-full overflow-hidden rounded-3xl border-0 bg-card shadow-2xl relative group cursor-grab active:cursor-grabbing">
+      {/* Feed Container */}
+      <div className="flex-1 overflow-y-auto px-4 py-8 space-y-12 relative z-10" ref={containerRef}>
+        {feedUsers.map((user, index) => (
+          <motion.div
+            key={`${user.id}-${index}`}
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: 0.6 }}
+            className="relative pl-8"
+          >
+            {/* The Knot/Node on the string */}
+            <div className="absolute left-0 top-12 -ml-[5px] w-3 h-3 rounded-full bg-primary ring-4 ring-background z-20" />
+            
+            {/* Connection Line from main thread to card */}
+            <div className="absolute left-0 top-12 w-8 h-0.5 bg-primary/20" />
+
+            {/* Profile Card */}
+            <div className="bg-card rounded-3xl overflow-hidden shadow-sm border border-border/50 group">
+              <div className="relative aspect-[4/5] md:aspect-video w-full overflow-hidden">
                 <img 
-                  src={currentUser.avatar} 
-                  alt={currentUser.name}
+                  src={user.avatar} 
+                  alt={user.name}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
                 
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-6">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-4xl font-serif text-white">{currentUser.name}, {currentUser.age}</h2>
-                      {currentUser.isVerified && (
-                        <ShieldCheck className="w-6 h-6 text-blue-400 fill-blue-400/20" />
-                      )}
+                {/* Overlay Info */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h2 className="text-3xl font-serif">{user.name}, {user.age}</h2>
+                        {user.isVerified && <ShieldCheck className="w-5 h-5 text-blue-400" />}
+                      </div>
+                      <p className="text-white/80 line-clamp-2 font-light">{user.bio}</p>
                     </div>
                     
-                    {/* Grades Display */}
-                    <div className="flex gap-1 mb-2">
-                      {currentUser.grades.map((grade, i) => (
-                        <Star key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                      ))}
-                    </div>
-
-                    <p className="text-lg text-white/80 font-light leading-relaxed">
-                      "{currentUser.bio}"
-                    </p>
+                    <Button 
+                      size="icon" 
+                      className="rounded-full w-14 h-14 bg-white text-black hover:bg-primary hover:text-white transition-colors shadow-xl"
+                      onClick={() => handleConnect(user)}
+                    >
+                      <Heart className="w-6 h-6 fill-current" />
+                    </Button>
                   </div>
                 </div>
-              </Card>
-            </motion.div>
-          </AnimatePresence>
-        </div>
 
-        {/* Controls */}
-        <div className="flex gap-6 mt-8">
-          <Button 
-            size="icon" 
-            variant="outline" 
-            className="w-16 h-16 rounded-full border-2 border-destructive text-destructive hover:bg-destructive hover:text-white transition-colors"
-            onClick={() => handleSwipe("left")}
-          >
-            <X className="w-8 h-8" />
-          </Button>
-          <Button 
-            size="icon" 
-            variant="outline" 
-            className="w-16 h-16 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-colors shadow-[0_0_20px_-5px_hsl(var(--primary))]"
-            onClick={() => handleSwipe("right")}
-          >
-            <Heart className="w-8 h-8 fill-current" />
-          </Button>
+                {/* Top Right Stats */}
+                <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+                   <div className="bg-black/30 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1 border border-white/10">
+                     <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                     <span className="text-xs font-bold text-white">4.8</span>
+                   </div>
+                </div>
+              </div>
+
+              {/* Quick Prompt/Icebreaker area (Optional expansion) */}
+              <div className="p-4 bg-muted/30 hidden">
+                 <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Icebreaker</p>
+                 <p className="text-sm">"What's the one thing you'd save in a fire?"</p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+        
+        <div className="h-24 flex items-center justify-center text-muted-foreground text-sm italic">
+          You've reached the end of the thread... for now.
         </div>
       </div>
       
