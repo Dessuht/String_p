@@ -11,12 +11,15 @@ import Profile from "@/pages/Profile";
 
 import OnboardingSurvey from "@/pages/OnboardingSurvey";
 
+import Radar from "@/pages/Radar";
+
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/survey" component={OnboardingSurvey} />
       <Route path="/swipe" component={Swipe} />
+      <Route path="/radar" component={Radar} />
       <Route path="/messages" component={Messages} />
       <Route path="/profile" component={Profile} />
       <Route component={NotFound} />
