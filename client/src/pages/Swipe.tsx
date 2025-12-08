@@ -6,17 +6,26 @@ import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, X, Heart, Star } from "lucide-react";
 import { MOCK_USERS } from "@/lib/mockData";
 import { NavBar } from "@/components/NavBar";
+import { MatchOverlay } from "@/components/MatchOverlay";
 
 export default function Swipe() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [matchData, setMatchData] = useState<any>(null);
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-10, 10]);
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
 
   const currentUser = MOCK_USERS[currentIndex];
+  const me = MOCK_USERS.find(u => u.id === "me");
 
   const handleSwipe = (direction: "left" | "right") => {
-    // In a real app, this would create a match or pass
+    // Simulate a match logic: Every 2nd swipe right is a match for demo purposes
+    if (direction === "right" && Math.random() > 0.5) {
+      setTimeout(() => {
+        setMatchData(currentUser);
+      }, 300);
+    }
+
     setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % MOCK_USERS.length);
       x.set(0);
@@ -109,6 +118,15 @@ export default function Swipe() {
         </div>
       </div>
       
+      {matchData && me && (
+        <MatchOverlay 
+          isOpen={!!matchData} 
+          onClose={() => setMatchData(null)}
+          matchedUser={matchData}
+          currentUser={me}
+        />
+      )}
+
       <NavBar />
     </div>
   );
