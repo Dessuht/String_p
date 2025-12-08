@@ -4,14 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { MapPin, X, Heart, Eye, EyeOff, Radio } from "lucide-react";
+import { MapPin, X, Heart, Eye, EyeOff, Radio, Zap } from "lucide-react";
 import { NavBar } from "@/components/NavBar";
 import { MOCK_USERS } from "@/lib/mockData";
+import { Badge } from "@/components/ui/badge";
 
 export default function Radar() {
   const [isScanning, setIsScanning] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [foundMatch, setFoundMatch] = useState<string | null>(null);
+  const [tugState, setTugState] = useState<'idle' | 'sending' | 'waiting' | 'connected'>('idle');
+  const [fatePoints, setFatePoints] = useState(120);
   
   // Simulated location of the match relative to center (0,0)
   const [matchPosition, setMatchPosition] = useState({ x: 0, y: 0 });
@@ -24,6 +27,9 @@ export default function Radar() {
     
     setIsScanning(!isScanning);
     if (!isScanning) {
+      // Reset state
+      setTugState('idle');
+      
       // Simulate finding a match
       setTimeout(() => {
         // Random position on the radar
@@ -38,6 +44,18 @@ export default function Radar() {
     } else {
       setFoundMatch(null);
     }
+  };
+
+  const handleTug = () => {
+    setTugState('sending');
+    setTimeout(() => {
+      setTugState('waiting');
+      // Simulate them tugging back
+      setTimeout(() => {
+        setTugState('connected');
+        setFatePoints(prev => prev + 50); // Gamification reward
+      }, 2000);
+    }, 1000);
   };
 
   const matchedUser = MOCK_USERS.find(u => u.id === foundMatch);
@@ -55,6 +73,13 @@ export default function Radar() {
       </div>
 
       {/* Top Bar Controls */}
+      <div className="absolute top-4 left-4 z-20">
+         <Badge variant="outline" className="bg-white/80 backdrop-blur-md px-3 py-1.5 gap-2 border-yellow-500/30">
+           <Zap className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+           <span className="font-bold text-yellow-600">{fatePoints} FP</span>
+         </Badge>
+      </div>
+
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-gray-100 shadow-sm">
         <Label htmlFor="ghost-mode" className="text-xs font-medium cursor-pointer">
           {isVisible ? "Visible" : "Ghost Mode"}
@@ -85,15 +110,19 @@ export default function Radar() {
               {foundMatch && (
                 <motion.path
                   initial={{ pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 1 }}
+                  animate={{ 
+                    pathLength: 1, 
+                    opacity: 1,
+                    stroke: tugState === 'connected' ? '#Eab308' : '#ef4444', // Gold when connected
+                    strokeWidth: tugState === 'sending' ? 4 : 2
+                  }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 1.5, ease: "easeInOut" }}
                   d={`M 160 160 Q ${160 + matchPosition.x / 2} ${160 + matchPosition.y / 2 + 50} ${160 + matchPosition.x} ${160 + matchPosition.y}`}
-                  stroke="hsl(var(--primary))" // Using the theme red color? No, let's use black for consistency or red for 'string'
-                  strokeWidth="2"
+                  stroke="hsl(var(--primary))" 
                   fill="none"
-                  strokeDasharray="4 4"
-                  className="stroke-red-500"
+                  strokeDasharray={tugState === 'connected' ? "0" : "4 4"}
+                  className="transition-colors duration-500"
                 />
               )}
             </AnimatePresence>
@@ -101,7 +130,7 @@ export default function Radar() {
 
           {/* Central User Node */}
           <div className="w-6 h-6 bg-black rounded-full z-20 shadow-xl border-4 border-white flex items-center justify-center">
-            <div className="w-2 h-2 bg-white rounded-full" />
+            <div className={`w-2 h-2 rounded-full transition-colors ${tugState === 'sending' ? 'bg-red-500 animate-ping' : 'bg-white'}`} />
           </div>
           
           {/* Scanning Waves */}
@@ -134,14 +163,23 @@ export default function Radar() {
             {foundMatch && (
               <motion.button
                 initial={{ scale: 0, opacity: 0, x: 0, y: 0 }}
-                animate={{ scale: 1, opacity: 1, x: matchPosition.x, y: matchPosition.y }}
+                animate={{ 
+                  scale: tugState === 'connected' ? 1.2 : 1, 
+                  opacity: 1, 
+                  x: matchPosition.x, 
+                  y: matchPosition.y 
+                }}
                 exit={{ scale: 0, opacity: 0 }}
                 whileHover={{ scale: 1.2 }}
                 onClick={() => setFoundMatch(foundMatch)} // Re-trigger dialog if needed
-                className="absolute w-12 h-12 rounded-full border-2 border-white shadow-lg z-30 overflow-hidden cursor-pointer"
+                className={`absolute w-12 h-12 rounded-full border-2 shadow-lg z-30 overflow-hidden cursor-pointer transition-all ${tugState === 'connected' ? 'border-yellow-400 shadow-yellow-200' : 'border-white'}`}
               >
-                <img src={matchedUser?.avatar} alt="Match" className="w-full h-full object-cover" />
-                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
+                <img src={matchedUser?.avatar} alt="Match" className={`w-full h-full object-cover transition-all ${tugState === 'idle' ? 'blur-sm grayscale' : ''}`} />
+                {tugState === 'connected' && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                     <Heart className="w-6 h-6 text-yellow-400 fill-yellow-400 animate-bounce" />
+                  </div>
+                )}
               </motion.button>
             )}
           </AnimatePresence>
@@ -152,29 +190,52 @@ export default function Radar() {
         </div>
 
         {/* Action Button */}
-        <div className="mt-16 relative">
-          <Button 
-            onClick={toggleScan}
-            size="lg"
-            className={`rounded-full w-20 h-20 shadow-2xl transition-all duration-500 ${
-              isScanning 
-                ? "bg-red-500 hover:bg-red-600 animate-pulse" 
-                : "bg-black hover:bg-black/90"
-            }`}
-          >
-            {isScanning ? (
-              <X className="w-8 h-8 text-white" />
-            ) : (
-              <Radio className="w-8 h-8 text-white" />
-            )}
-          </Button>
+        <div className="mt-16 relative h-20 flex items-center justify-center">
+          {!foundMatch ? (
+            <Button 
+              onClick={toggleScan}
+              size="lg"
+              className={`rounded-full w-20 h-20 shadow-2xl transition-all duration-500 ${
+                isScanning 
+                  ? "bg-red-500 hover:bg-red-600 animate-pulse" 
+                  : "bg-black hover:bg-black/90"
+              }`}
+            >
+              {isScanning ? (
+                <X className="w-8 h-8 text-white" />
+              ) : (
+                <Radio className="w-8 h-8 text-white" />
+              )}
+            </Button>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <Button 
+                onClick={handleTug}
+                disabled={tugState !== 'idle'}
+                size="lg"
+                className={`rounded-full px-8 h-14 shadow-xl transition-all ${
+                  tugState === 'connected' 
+                    ? "bg-yellow-400 hover:bg-yellow-500 text-black" 
+                    : "bg-red-500 hover:bg-red-600 text-white"
+                }`}
+              >
+                {tugState === 'idle' && "Tug String"}
+                {tugState === 'sending' && "Sending Pulse..."}
+                {tugState === 'waiting' && "Waiting..."}
+                {tugState === 'connected' && "Connected! (+50 FP)"}
+              </Button>
+              {tugState === 'idle' && (
+                <p className="text-xs text-muted-foreground animate-pulse">Tap to get their attention</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Match Details Modal */}
+      {/* Match Details Modal (Only show when connected) */}
       <AnimatePresence>
-        {foundMatch && matchedUser && (
-          <Dialog open={!!foundMatch} onOpenChange={() => setFoundMatch(null)}>
+        {foundMatch && matchedUser && tugState === 'connected' && (
+          <Dialog open={true} onOpenChange={() => {}}>
             <DialogContent className="sm:max-w-md bg-white border-none shadow-2xl p-0 overflow-hidden rounded-[2rem] m-4">
               <div className="relative h-96">
                 <img 
@@ -207,11 +268,8 @@ export default function Radar() {
               <div className="p-6 bg-white space-y-3">
                  <Button className="w-full h-14 bg-black text-white hover:bg-black/90 rounded-xl text-lg font-medium shadow-lg shadow-black/10">
                    <Heart className="w-5 h-5 mr-2 fill-current text-red-500" />
-                   Send a String
+                   Start Chat
                  </Button>
-                 <p className="text-center text-xs text-gray-400">
-                   They will only see this if they are also looking.
-                 </p>
               </div>
             </DialogContent>
           </Dialog>
