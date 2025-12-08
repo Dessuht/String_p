@@ -53,9 +53,9 @@ export default function Home() {
             </ul>
           </div>
 
-          <Link href="/swipe">
+          <Link href="/survey">
             <Button className="w-full h-14 text-lg rounded-full bg-primary hover:bg-primary/90 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.5)] transition-all hover:scale-[1.02]">
-              Start Weaving Your Story
+              Join the Beta & Shape the Future
             </Button>
           </Link>
           

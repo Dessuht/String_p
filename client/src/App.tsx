@@ -9,10 +9,13 @@ import Swipe from "@/pages/Swipe";
 import Messages from "@/pages/Messages";
 import Profile from "@/pages/Profile";
 
+import OnboardingSurvey from "@/pages/OnboardingSurvey";
+
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/survey" component={OnboardingSurvey} />
       <Route path="/swipe" component={Swipe} />
       <Route path="/messages" component={Messages} />
       <Route path="/profile" component={Profile} />
