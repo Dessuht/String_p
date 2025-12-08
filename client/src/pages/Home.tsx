@@ -1,68 +1,150 @@
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { useLocation } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
-import heroImg from "@assets/generated_images/abstract_red_string_connecting_points_in_dark_void.png";
+import imgString from "@assets/generated_images/single_piece_of_twine_string_on_white.png";
+import imgBroken from "@assets/generated_images/broken_twine_string_on_white.png";
+import imgKnot from "@assets/generated_images/knotted_twine_string_on_white.png";
 
 export default function Home() {
+  const [, setLocation] = useLocation();
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const slides = [
+    {
+      id: 0,
+      image: imgString,
+      title: "Discover your ideal string",
+      subtitle: (
+        <>
+          Please read our <span className="underline cursor-pointer">privacy policy</span>
+          <br /> and <span className="underline cursor-pointer">policy regarding</span> before registering.
+        </>
+      ),
+    },
+    {
+      id: 1,
+      image: imgBroken,
+      title: "No Strings Attached",
+      subtitle: (
+        <>
+          Please read our <span className="underline cursor-pointer">privacy policy</span>
+          <br /> and <span className="underline cursor-pointer">policy regarding</span> before registering.
+        </>
+      ),
+    },
+    {
+      id: 2,
+      image: imgKnot,
+      title: "Tie the Knot",
+      subtitle: (
+        <>
+          Please read our <span className="underline cursor-pointer">privacy policy</span>
+          <br /> and <span className="underline cursor-pointer">policy regarding</span> before registering.
+        </>
+      ),
+    },
+  ];
+
+  const handleNext = () => {
+    if (currentSlide < slides.length - 1) {
+      setCurrentSlide((prev) => prev + 1);
+    } else {
+      setLocation("/survey");
+    }
+  };
+
+  const handleSkip = () => {
+    setLocation("/survey");
+  };
+
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center text-center p-6">
-      {/* Background with overlay */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${heroImg})` }}
-      >
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px]" />
+    <div className="min-h-screen bg-white flex flex-col justify-between items-center text-center px-6 py-8 relative max-w-md mx-auto">
+      {/* Top Bar */}
+      <div className="w-full flex justify-between items-center text-xs font-medium text-black/60 pt-2 px-2">
+        {/* Placeholder for status bar time/icons if we wanted to mimic the screenshot exactly, 
+            but usually in web we leave this blank or put a logo. 
+            The screenshot has '11:10', wifi, battery etc. 
+            We will skip replicating the system status bar as it's a web app. */}
       </div>
 
-      <div className="relative z-10 max-w-lg mx-auto space-y-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <h1 className="text-6xl md:text-8xl font-serif text-primary mb-2 tracking-tighter">
-            String
-          </h1>
-          <p className="text-xl md:text-2xl text-foreground/80 font-light tracking-wide">
-            Deeper Connections. <br/>
-            <span className="text-primary italic">No Strings Attached? No, we want strings.</span>
-          </p>
-        </motion.div>
-
-        <motion.div
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col items-center justify-center w-full mt-10">
+        
+        {/* Logo S */}
+        <motion.div 
+          className="text-6xl text-gray-500 mb-8 font-sans font-normal"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.8 }}
-          className="space-y-4"
         >
-          <div className="glass-panel p-6 rounded-2xl text-left space-y-3">
-            <h3 className="font-serif text-xl text-primary">Why String?</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                Verified ID checks (No bots, No catfish)
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                Messages appear only after they reply
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                Grade your matches to ensure quality
-              </li>
-            </ul>
-          </div>
-
-          <Link href="/survey">
-            <Button className="w-full h-14 text-lg rounded-full bg-primary hover:bg-primary/90 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.5)] transition-all hover:scale-[1.02]">
-              Join the Beta & Shape the Future
-            </Button>
-          </Link>
-          
-          <p className="text-xs text-muted-foreground">
-            By joining, you agree to our Terms & String Theory.
-          </p>
+          S
         </motion.div>
+
+        {/* Carousel Image */}
+        <div className="relative w-64 h-64 mb-8 flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={currentSlide}
+              src={slides[currentSlide].image}
+              alt="String illustration"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="object-contain w-full h-full mix-blend-multiply" 
+            />
+          </AnimatePresence>
+        </div>
+
+        {/* Text Content */}
+        <div className="space-y-4 mb-8">
+          <AnimatePresence mode="wait">
+            <motion.h1 
+              key={currentSlide}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="text-2xl font-bold text-black tracking-tight"
+            >
+              {slides[currentSlide].title}
+            </motion.h1>
+          </AnimatePresence>
+          
+          <p className="text-[10px] text-gray-400 leading-tight max-w-[200px] mx-auto">
+            {slides[currentSlide].subtitle}
+          </p>
+        </div>
+
+        {/* Pagination Dots */}
+        <div className="flex gap-2 mb-8">
+          {slides.map((slide) => (
+            <div
+              key={slide.id}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                currentSlide === slide.id 
+                  ? "w-6 bg-black" 
+                  : "w-1.5 bg-gray-200"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Footer Controls */}
+      <div className="w-full space-y-4 mb-4">
+        <Button 
+          onClick={handleNext}
+          className="w-full bg-black hover:bg-black/90 text-white rounded-xl h-12 text-sm font-semibold tracking-wide"
+        >
+          Next
+        </Button>
+        
+        <button 
+          onClick={handleSkip}
+          className="w-full text-sm font-semibold text-black py-2"
+        >
+          Skip
+        </button>
       </div>
     </div>
   );
