@@ -9,11 +9,15 @@ import { Lock, Crown } from "lucide-react";
 import { PremiumModal } from "@/components/PremiumModal";
 import { GradingModal } from "@/components/GradingModal";
 import { Button } from "@/components/ui/button";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Messages() {
   const [, setLocation] = useLocation();
   const [showPremium, setShowPremium] = useState(false);
   const [showGrading, setShowGrading] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const getPartner = (matchId: string) => {
     const match = MOCK_MATCHES.find(m => m.id === matchId);
@@ -26,6 +30,46 @@ export default function Messages() {
     // In a real app this would filter by matchId properly
     // For demo, we just return all messages for the first user
     return MOCK_MESSAGES.filter(m => m.senderId === "1" || m.receiverId === "1");
+  };
+
+  const ratingMutation = useMutation({
+    mutationFn: async ({ isPositive, reason }: { isPositive: boolean; reason?: string }) => {
+      const partner = getPartner(showGrading!);
+      if (!partner) throw new Error("Partner not found");
+
+      return await apiRequest("/api/ratings", {
+        method: "POST",
+        body: JSON.stringify({
+          raterUserId: "me",
+          ratedUserId: partner.id,
+          isPositive,
+          reason,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: variables.isPositive ? "Positive rating submitted!" : "Feedback submitted",
+        description: variables.isPositive 
+          ? "You've earned 5 Fidelity Points for your honest feedback." 
+          : "Thank you for helping us maintain community quality.",
+      });
+      setShowGrading(null);
+    },
+    onError: () => {
+      toast({
+        title: "Failed to submit rating",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRatingSubmit = (isPositive: boolean, reason?: string) => {
+    ratingMutation.mutate({ isPositive, reason });
   };
 
   return (
@@ -140,10 +184,8 @@ export default function Messages() {
           isOpen={!!showGrading} 
           onClose={() => setShowGrading(null)}
           partnerName={getPartner(showGrading)?.name || "Partner"}
-          onGrade={(grade) => {
-            alert(`Graded ${grade}/5! This will help improve future matches.`);
-            setShowGrading(null);
-          }}
+          onSubmit={handleRatingSubmit}
+          isSubmitting={ratingMutation.isPending}
         />
       )}
 

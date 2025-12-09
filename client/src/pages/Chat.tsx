@@ -9,6 +9,9 @@ import { cn } from "@/lib/utils";
 import { ConnectionKnot } from "@/components/ConnectionKnot";
 import { GradingModal } from "@/components/GradingModal";
 import { StarRating } from "@/components/StarRating";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:id");
@@ -16,6 +19,7 @@ export default function Chat() {
   const partnerId = params?.id;
   const partner = MOCK_USERS.find(u => u.id === partnerId);
   const [showGrading, setShowGrading] = useState(false);
+  const { toast } = useToast();
   
   // Initialize with mock messages for this conversation
   const [messages, setMessages] = useState<Message[]>(
@@ -71,6 +75,43 @@ export default function Chat() {
 
     setMessages([...messages, msg]);
     setNewMessage("");
+  };
+
+  const ratingMutation = useMutation({
+    mutationFn: async ({ isPositive, reason }: { isPositive: boolean; reason?: string }) => {
+      return await apiRequest("/api/ratings", {
+        method: "POST",
+        body: JSON.stringify({
+          raterUserId: "me",
+          ratedUserId: partnerId,
+          isPositive,
+          reason,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: variables.isPositive ? "Positive rating submitted!" : "Feedback submitted",
+        description: variables.isPositive 
+          ? "You've earned 5 Fidelity Points for your honest feedback." 
+          : "Thank you for helping us maintain community quality.",
+      });
+      setShowGrading(false);
+    },
+    onError: () => {
+      toast({
+        title: "Failed to submit rating",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRatingSubmit = (isPositive: boolean, reason?: string) => {
+    ratingMutation.mutate({ isPositive, reason });
   };
 
   if (!partner) return <div>User not found</div>;
@@ -169,16 +210,14 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Grading Modal */}
+      {/* Rating Modal */}
       {showGrading && (
         <GradingModal 
           isOpen={showGrading} 
           onClose={() => setShowGrading(false)}
           partnerName={partner.name}
-          onGrade={(grade) => {
-            alert(`Graded ${grade}/5! Connection strengthened.`);
-            setShowGrading(false);
-          }}
+          onSubmit={handleRatingSubmit}
+          isSubmitting={ratingMutation.isPending}
         />
       )}
     </div>
