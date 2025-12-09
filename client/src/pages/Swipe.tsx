@@ -7,6 +7,7 @@ import { MOCK_USERS } from "@/lib/mockData";
 import { NavBar } from "@/components/NavBar";
 import { MatchOverlay } from "@/components/MatchOverlay";
 import { useLocation } from "wouter";
+import { FidelityPointsCounter } from "@/components/FidelityPointsCounter";
 
 export default function Swipe() {
   const [matchData, setMatchData] = useState<any>(null);
@@ -20,14 +21,17 @@ export default function Swipe() {
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 relative overflow-hidden flex flex-col">
       {/* Header */}
-      <header className="px-6 pt-6 pb-2 flex justify-between items-end bg-background/80 backdrop-blur-md sticky top-0 z-30 border-b border-border/5">
+      <header className="px-6 pt-6 pb-2 flex flex-wrap justify-between items-end gap-2 bg-background/80 backdrop-blur-md sticky top-0 z-30 border-b border-border/5">
         <div>
           <h1 className="text-3xl font-serif text-primary">The Thread</h1>
           <p className="text-xs text-muted-foreground">Follow the string to find your match</p>
         </div>
-        <Badge variant="outline" className="border-primary/50 text-primary">
-          {feedUsers.length} Nearby
-        </Badge>
+        <div className="flex items-center gap-2">
+          <FidelityPointsCounter variant="compact" showLabel={false} />
+          <Badge variant="outline" className="border-primary/50 text-primary">
+            {feedUsers.length} Nearby
+          </Badge>
+        </div>
       </header>
 
       {/* The Continuous Thread Visual */}

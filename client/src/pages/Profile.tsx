@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { ShieldCheck, Settings, Crown, Star } from "lucide-react";
 
 import { Link } from "wouter";
+import { FidelityPointsCounter } from "@/components/FidelityPointsCounter";
 
 export default function Profile() {
   const me = MOCK_USERS.find(u => u.id === "me");
@@ -22,15 +23,20 @@ export default function Profile() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         
-        <Link href="/profile/edit">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="absolute top-4 right-4 rounded-full bg-background/50 backdrop-blur-md border-0 text-white"
-          >
-            <Settings className="w-5 h-5" />
-          </Button>
-        </Link>
+        <div className="absolute top-4 right-4 flex gap-2">
+          <div className="bg-background/50 backdrop-blur-md rounded-full p-1">
+            <FidelityPointsCounter variant="compact" showLabel={false} />
+          </div>
+          <Link href="/profile/edit">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="rounded-full bg-background/50 backdrop-blur-md border-0 text-white"
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="px-6 -mt-12 relative z-10">

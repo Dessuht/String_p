@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { FidelityPointsCounter } from "@/components/FidelityPointsCounter";
 
 export default function Messages() {
   const [, setLocation] = useLocation();
@@ -68,17 +69,9 @@ export default function Messages() {
 
   return (
     <div className="min-h-screen bg-background pb-24 px-4 pt-6">
-      <header className="mb-6 flex justify-between items-center">
+      <header className="mb-6 flex flex-wrap justify-between items-center gap-2">
         <h1 className="text-3xl font-serif text-primary">Strings</h1>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-xs text-muted-foreground"
-          onClick={() => setShowPremium(true)}
-        >
-          <Crown className="w-4 h-4 mr-1 text-yellow-500" />
-          Get Premium
-        </Button>
+        <FidelityPointsCounter variant="compact" showLabel={false} />
       </header>
 
       {/* New Matches Row */}
