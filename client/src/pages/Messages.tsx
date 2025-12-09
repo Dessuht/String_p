@@ -10,7 +10,7 @@ import { PremiumModal } from "@/components/PremiumModal";
 import { GradingModal } from "@/components/GradingModal";
 import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { FidelityPointsCounter } from "@/components/FidelityPointsCounter";
 
@@ -53,6 +53,9 @@ export default function Messages() {
           : "Thank you for helping us maintain community quality.",
       });
       setShowGrading(null);
+      
+      // Invalidate FP counter query to refresh the balance
+      queryClient.invalidateQueries({ queryKey: ["/api/users", "me"] });
     },
     onError: () => {
       toast({

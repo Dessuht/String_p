@@ -10,7 +10,7 @@ import { ConnectionKnot } from "@/components/ConnectionKnot";
 import { GradingModal } from "@/components/GradingModal";
 import { StarRating } from "@/components/StarRating";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Chat() {
@@ -94,6 +94,9 @@ export default function Chat() {
           : "Thank you for helping us maintain community quality.",
       });
       setShowGrading(false);
+      
+      // Invalidate FP counter query to refresh the balance
+      queryClient.invalidateQueries({ queryKey: ["/api/users", "me"] });
     },
     onError: () => {
       toast({
