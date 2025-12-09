@@ -1,0 +1,47 @@
+II. The "Tie the Knot" User Flow (Digital to Real-Life Connection)
+
+    Initial Chat (Limited): A fixed timer (e.g., 72 hours) begins upon matching. Chat is simplified (no media). Penalty for Failure: Chat is archived; both users receive a −0.1 Star Rating penalty and lose 20 FP.
+
+    Threshold Requirement: Users must exchange a minimum of X messages each (e.g., X=5) within the time limit to unlock the "Knot Request."
+
+    Knot Request Decision: When the threshold is met, the user is prompted to "Tie the Knot." Penalty for Refusal: Chat immediately closes; the refuser takes a −0.2 Star Rating penalty for ending an engaged conversation.
+
+    Post-Knot Success: Chat is permanent and full features are unlocked. Reward: Both users receive a +0.1 Star Rating increase and 50 FP.
+
+III. Public Date Spot Suggestion
+
+    Date Proposal Tool: A "Suggest Date" button in the post-Knot chat initiates the feature to streamline scheduling.
+
+    Location Logic: App calculates a midpoint or uses a city-center bias to determine the neutral search area.
+
+    First-Date Filters: Map query filters for: min_rating (≥4.0), price_levels (inexpensive/moderate), and appropriate Categories (Cafes, Parks, Casual Dining). Ensures suggestions are safe and conducive to conversation.
+
+    Location Cards: List of 3-5 suggested places showing Name, Rating, Distance, and Image.
+
+    One-Tap Share: The "Select [Place Name] for Date" button automatically populates the chat with the address and a map link.
+
+IV. Real-Life Date Accountability
+
+    Accountability Timer: 24 hours prior to the date, a mandatory "Confirm Attendance" reminder is sent. Discourages last-minute ghosting.
+
+    Post-Date Feedback Prompt: Within 12 hours after the date, users receive a persistent prompt: "How did your String meet-up go?" Drives the mandatory quality control loop.
+
+    No-Show/Flake Penalty: Required Question: "Did your date show up?" If "No," the no-show user immediately receives a significant Star Rating deduction (−0.5) and a temporary suspension from String Radar. Punishes real-world ghosting.
+
+    Final Knot Status: Users indicate the next step (e.g., Planning another date, Tie the Knot permanently). Tie the Knot Permanently archives the successful connection as a "Success Story."
+
+V. Enhanced Profile Fields
+
+    Verification Status: System-Generated (Requires Photo Verification or ID Check). Must be completed to earn the Blue Checkmark and use the Star Rating system (addresses "Fake Profiles").
+
+    Voice Prompt: Required 15-Second Audio Recording. Proves authenticity and adds personality.
+
+    Relationship Goal: Required Multi-Choice (The Knot, Red Thread, Casual String). Used as a hard filter for matching.
+
+    Investment Level: Required 5-Point Slider (1=Low Effort/Browsing, 5=High Effort/Dedicated). Prioritizes users with similar effort levels.
+
+    Values Alignment: Select 3 out of 10 Core Values (e.g., Ambition, Humor, Health). Prioritizes deeper, algorithmic compatibility.
+
+    Deep Dive Prompts: Select 3 of 10 prompts (e.g., "The hill I will always die on is..."). Text appears in the chat to provide conversation starters.
+
+    Life Stage: Required Dropdown (e.g., Building Career, Established Career). Matches users based on current phase of life.

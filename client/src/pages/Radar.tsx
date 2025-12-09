@@ -4,45 +4,137 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { MapPin, X, Heart, Eye, EyeOff, Radio } from "lucide-react";
+import { MapPin, X, Heart, Eye, EyeOff, Radio, Sparkles, Clock } from "lucide-react";
 import { NavBar } from "@/components/NavBar";
 import { MOCK_USERS } from "@/lib/mockData";
 import { FidelityPointsCounter } from "@/components/FidelityPointsCounter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Radar() {
   const [isScanning, setIsScanning] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [foundMatch, setFoundMatch] = useState<string | null>(null);
   const [tugState, setTugState] = useState<'idle' | 'sending' | 'waiting' | 'connected'>('idle');
+  const { toast } = useToast();
   
   // Simulated location of the match relative to center (0,0)
   const [matchPosition, setMatchPosition] = useState({ x: 0, y: 0 });
 
-  const toggleScan = () => {
-    if (!isVisible) {
-      alert("You must be visible to scan for others.");
+  // Fetch current user to check FP balance
+  const { data: currentUser } = useQuery<any>({
+    queryKey: ["/api/users", "me"],
+  });
+
+  // Check for active radar scans
+  const { data: activeScans } = useQuery<any>({
+    queryKey: ["/api/radar-scans", "me", "active"],
+    queryFn: () => fetch("/api/radar-scans/user/me/active").then(res => res.json()),
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  const activeScan = activeScans?.[0];
+  const hasActiveBoost = activeScan && new Date(activeScan.boostExpiresAt) > new Date();
+  const boostExpiresAt = hasActiveBoost ? new Date(activeScan.boostExpiresAt) : null;
+
+  // Time remaining for boost
+  const [timeRemaining, setTimeRemaining] = useState<string>("");
+
+  useEffect(() => {
+    if (!boostExpiresAt) {
+      setTimeRemaining("");
       return;
     }
-    
-    setIsScanning(!isScanning);
-    if (!isScanning) {
-      // Reset state
-      setTugState('idle');
+
+    const updateTimer = () => {
+      const now = new Date();
+      const diff = boostExpiresAt.getTime() - now.getTime();
       
-      // Simulate finding a match
-      setTimeout(() => {
+      if (diff <= 0) {
+        setTimeRemaining("");
+        queryClient.invalidateQueries({ queryKey: ["/api/radar-scans", "me", "active"] });
+        return;
+      }
+
+      const minutes = Math.floor(diff / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      setTimeRemaining(`${minutes}m ${seconds}s`);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [boostExpiresAt]);
+
+  // Radar scan mutation
+  const radarScanMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/radar-scans", { userId: "me" });
+    },
+    onSuccess: (data) => {
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ["/api/users", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/radar-scans", "me", "active"] });
+      
+      toast({
+        title: "Radar Scan Activated! ✨",
+        description: "Priority boost active for 1 hour. High-rated user revealed!",
+      });
+
+      // Reveal the high-rated user
+      if (data.revealedUsers && data.revealedUsers.length > 0) {
+        const revealedUser = data.revealedUsers[0];
+        
         // Random position on the radar
         const angle = Math.random() * Math.PI * 2;
-        const distance = 80; // Fixed distance for UI consistency
+        const distance = 80;
         setMatchPosition({
           x: Math.cos(angle) * distance,
           y: Math.sin(angle) * distance
         });
-        setFoundMatch("3"); // Taylor
-      }, 3000);
-    } else {
-      setFoundMatch(null);
+        setFoundMatch(revealedUser.id);
+      }
+      
+      setIsScanning(false);
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Scan Failed",
+        description: error.message || "Not enough Fidelity Points. You need 50 FP.",
+      });
+      setIsScanning(false);
+    },
+  });
+
+  const toggleScan = () => {
+    if (!isVisible) {
+      toast({
+        variant: "destructive",
+        title: "Cannot Scan",
+        description: "You must be visible to scan for others.",
+      });
+      return;
     }
+
+    if (!currentUser || currentUser.fidelityPoints < 50) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient Fidelity Points",
+        description: "You need 50 FP to activate a Radar Scan.",
+      });
+      return;
+    }
+    
+    setIsScanning(true);
+    setTugState('idle');
+    setFoundMatch(null);
+    
+    // Start the scan with animation delay
+    setTimeout(() => {
+      radarScanMutation.mutate();
+    }, 2000);
   };
 
   const handleTug = () => {
@@ -77,6 +169,22 @@ export default function Radar() {
         </div>
       </div>
 
+      {/* Priority Boost Indicator */}
+      {hasActiveBoost && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full flex items-center gap-2 shadow-lg" data-testid="badge-priority-boost">
+            <Sparkles className="w-4 h-4" />
+            <span className="text-xs font-bold">PRIORITY BOOST</span>
+            {timeRemaining && (
+              <>
+                <Clock className="w-3 h-3" />
+                <span className="text-xs" data-testid="text-boost-timer">{timeRemaining}</span>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-gray-100 shadow-sm">
         <Label htmlFor="ghost-mode" className="text-xs font-medium cursor-pointer">
           {isVisible ? "Visible" : "Ghost Mode"}
@@ -86,6 +194,7 @@ export default function Radar() {
           checked={isVisible} 
           onCheckedChange={setIsVisible} 
           className="scale-75"
+          data-testid="switch-visibility"
         />
         {isVisible ? <Eye className="w-3 h-3 text-green-500" /> : <EyeOff className="w-3 h-3 text-gray-400" />}
       </div>
@@ -94,7 +203,7 @@ export default function Radar() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-serif font-bold mb-2 tracking-tight">String Radar</h1>
           <p className="text-gray-400 text-xs uppercase tracking-widest">
-            {isScanning ? "Scanning frequencies..." : "Tap to scan area"}
+            {isScanning ? "Scanning frequencies..." : "50 FP to reveal high-rated user"}
           </p>
         </div>
 
@@ -110,7 +219,7 @@ export default function Radar() {
                   animate={{ 
                     pathLength: 1, 
                     opacity: 1,
-                    stroke: tugState === 'connected' ? '#Eab308' : '#ef4444', // Gold when connected
+                    stroke: tugState === 'connected' ? '#Eab308' : '#ef4444',
                     strokeWidth: tugState === 'sending' ? 4 : 2
                   }}
                   exit={{ opacity: 0 }}
@@ -168,8 +277,9 @@ export default function Radar() {
                 }}
                 exit={{ scale: 0, opacity: 0 }}
                 whileHover={{ scale: 1.2 }}
-                onClick={() => setFoundMatch(foundMatch)} // Re-trigger dialog if needed
+                onClick={() => setFoundMatch(foundMatch)}
                 className={`absolute w-12 h-12 rounded-full border-2 shadow-lg z-30 overflow-hidden cursor-pointer transition-all ${tugState === 'connected' ? 'border-yellow-400 shadow-yellow-200' : 'border-white'}`}
+                data-testid={`button-radar-match-${foundMatch}`}
               >
                 <img src={matchedUser?.avatar} alt="Match" className={`w-full h-full object-cover transition-all ${tugState === 'idle' ? 'blur-sm grayscale' : ''}`} />
                 {tugState === 'connected' && (
@@ -191,15 +301,17 @@ export default function Radar() {
           {!foundMatch ? (
             <Button 
               onClick={toggleScan}
+              disabled={isScanning || radarScanMutation.isPending}
               size="lg"
               className={`rounded-full w-20 h-20 shadow-2xl transition-all duration-500 ${
                 isScanning 
                   ? "bg-red-500 hover:bg-red-600 animate-pulse" 
                   : "bg-black hover:bg-black/90"
               }`}
+              data-testid="button-radar-scan"
             >
               {isScanning ? (
-                <X className="w-8 h-8 text-white" />
+                <Radio className="w-8 h-8 text-white animate-pulse" />
               ) : (
                 <Radio className="w-8 h-8 text-white" />
               )}
@@ -215,11 +327,12 @@ export default function Radar() {
                     ? "bg-yellow-400 hover:bg-yellow-500 text-black" 
                     : "bg-red-500 hover:bg-red-600 text-white"
                 }`}
+                data-testid="button-tug-radar-match"
               >
                 {tugState === 'idle' && "Tug String"}
                 {tugState === 'sending' && "Sending Pulse..."}
                 {tugState === 'waiting' && "Waiting..."}
-                {tugState === 'connected' && "Connected! (+50 FP)"}
+                {tugState === 'connected' && "Connected!"}
               </Button>
               {tugState === 'idle' && (
                 <p className="text-xs text-muted-foreground animate-pulse">Tap to get their attention</p>
@@ -257,13 +370,14 @@ export default function Radar() {
                   size="icon"
                   className="absolute top-4 right-4 bg-black/20 backdrop-blur-md hover:bg-black/40 text-white border-0 rounded-full w-10 h-10"
                   onClick={() => setFoundMatch(null)}
+                  data-testid="button-close-match-modal"
                 >
                   <X className="w-5 h-5" />
                 </Button>
               </div>
 
               <div className="p-6 bg-white space-y-3">
-                 <Button className="w-full h-14 bg-black text-white hover:bg-black/90 rounded-xl text-lg font-medium shadow-lg shadow-black/10">
+                 <Button className="w-full h-14 bg-black text-white hover:bg-black/90 rounded-xl text-lg font-medium shadow-lg shadow-black/10" data-testid="button-start-chat-radar">
                    <Heart className="w-5 h-5 mr-2 fill-current text-red-500" />
                    Start Chat
                  </Button>
