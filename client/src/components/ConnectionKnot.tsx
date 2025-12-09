@@ -210,16 +210,18 @@ export function ConnectionKnot({
               <Heart className="w-5 h-5 text-primary" />
               Tie the Knot?
             </DialogTitle>
-            <DialogDescription>
-              By tying the knot, you're committing to this connection. This will:
-              <ul className="list-disc list-inside mt-2 space-y-1 text-left">
-                <li>Make this chat permanent (no expiry timer)</li>
-                <li>Unlock all features including date suggestions</li>
-                <li>Grant you both +0.1 Star Rating and 50 FP on mutual acceptance</li>
-              </ul>
-              <p className="mt-3 text-sm font-medium text-destructive">
-                Note: Refusing after the other person accepts will result in a -0.2 Star Rating penalty.
-              </p>
+            <DialogDescription asChild>
+              <div className="text-sm text-muted-foreground">
+                By tying the knot, you're committing to this connection. This will:
+                <ul className="list-disc list-inside mt-2 space-y-1 text-left">
+                  <li>Make this chat permanent (no expiry timer)</li>
+                  <li>Unlock all features including date suggestions</li>
+                  <li>Grant you both +0.1 Star Rating and 50 FP on mutual acceptance</li>
+                </ul>
+                <p className="mt-3 text-sm font-medium text-destructive">
+                  Note: Refusing after the other person accepts will result in a -0.2 Star Rating penalty.
+                </p>
+              </div>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
