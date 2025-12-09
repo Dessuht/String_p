@@ -18,13 +18,15 @@ export function NavBar() {
         {navItems.map((item) => {
           const isActive = location === item.href;
           return (
-            <Link key={item.href} href={item.href}>
-              <a className={cn(
+            <Link 
+              key={item.href} 
+              href={item.href}
+              className={cn(
                 "flex flex-col items-center gap-1 transition-all duration-300",
                 isActive ? "text-black scale-110" : "text-gray-400 hover:text-gray-600"
-              )}>
-                <item.icon className={cn("w-6 h-6", isActive && "fill-current")} />
-              </a>
+              )}
+            >
+              <item.icon className={cn("w-6 h-6", isActive && "fill-current")} />
             </Link>
           );
         })}
