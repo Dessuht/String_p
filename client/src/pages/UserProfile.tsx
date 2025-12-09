@@ -1,16 +1,92 @@
 import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, ShieldCheck, MapPin, Heart, X } from "lucide-react";
+import { ArrowLeft, ShieldCheck, MapPin, Heart, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MOCK_USERS } from "@/lib/mockData";
 import { Badge } from "@/components/ui/badge";
 import { StarRating } from "@/components/StarRating";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { User } from "@/lib/mockData";
 
 export default function UserProfile() {
   const [, params] = useRoute("/user/:id");
   const [, setLocation] = useLocation();
   const userId = params?.id;
   const user = MOCK_USERS.find(u => u.id === userId);
+  const { toast } = useToast();
+  const [hasTugged, setHasTugged] = useState(false);
+
+  // Get current user's data to show daily tugs remaining
+  const { data: currentUser } = useQuery<User>({
+    queryKey: ["/api/users", "me"],
+    enabled: false, // Using mock data for now
+    initialData: MOCK_USERS.find(u => u.id === "me"),
+  });
+
+  // Check if already tugged this user
+  const { data: tugCheckData } = useQuery({
+    queryKey: ["/api/tugs/check", "me", userId],
+    enabled: false, // Using local state for now
+  });
+
+  // Tug mutation
+  const tugMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/tugs", {
+        fromUserId: "me",
+        toUserId: userId,
+      });
+    },
+    onSuccess: (data: any) => {
+      setHasTugged(true);
+      
+      if (data.isMutual) {
+        toast({
+          title: "It's a Match! 🎉",
+          description: `You and ${user?.name} have matched! Start chatting now.`,
+          duration: 5000,
+        });
+        // Navigate to chat after a brief delay
+        setTimeout(() => {
+          setLocation(`/chat/${userId}`);
+        }, 1500);
+      } else {
+        toast({
+          title: "Tug sent!",
+          description: `${user?.name} will be notified of your interest.`,
+        });
+      }
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/users", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tugs/check"] });
+    },
+    onError: (error: any) => {
+      const errorMessage = error?.message || "Failed to send tug";
+      
+      if (errorMessage.includes("No tugs remaining")) {
+        toast({
+          title: "Out of Tugs",
+          description: "You've used all your tugs for today. Come back tomorrow or use Fidelity Points to refill!",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  const handleTug = () => {
+    if (!hasTugged && !tugMutation.isPending) {
+      tugMutation.mutate();
+    }
+  };
 
   if (!user) return <div className="p-8 text-center">User not found</div>;
 
@@ -74,18 +150,45 @@ export default function UserProfile() {
           </div>
         </div>
 
+        {/* Daily Tugs Counter */}
+        <div className="flex items-center justify-center gap-2 pt-4">
+          <Zap className="w-4 h-4 text-primary" />
+          <span className="text-sm text-muted-foreground" data-testid="text-tugs-remaining">
+            {currentUser?.dailyTugsRemaining ?? 10} Tugs remaining today
+          </span>
+        </div>
+
         {/* Action Buttons */}
-        <div className="pt-8 grid grid-cols-4 gap-4">
-          <Button variant="outline" size="lg" className="rounded-full h-14 w-14 p-0 border-2 border-destructive text-destructive col-span-1">
+        <div className="pt-4 grid grid-cols-4 gap-4">
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="rounded-full h-14 w-14 p-0 border-2 border-destructive text-destructive col-span-1"
+            data-testid="button-pass"
+            onClick={() => window.history.back()}
+          >
             <X className="w-8 h-8" />
           </Button>
           <Button 
             size="lg" 
             className="rounded-full h-14 text-lg bg-primary hover:bg-primary/90 col-span-3 shadow-lg shadow-primary/20"
-            onClick={() => setLocation(`/chat/${user.id}`)}
+            onClick={handleTug}
+            disabled={hasTugged || tugMutation.isPending || (currentUser?.dailyTugsRemaining ?? 0) <= 0}
+            data-testid="button-tug"
           >
-            <Heart className="w-6 h-6 mr-2 fill-current" />
-            Message
+            {tugMutation.isPending ? (
+              "Sending..."
+            ) : hasTugged ? (
+              <>
+                <Heart className="w-6 h-6 mr-2 fill-current" />
+                Tugged!
+              </>
+            ) : (
+              <>
+                <Zap className="w-6 h-6 mr-2" />
+                Tug
+              </>
+            )}
           </Button>
         </div>
       </div>

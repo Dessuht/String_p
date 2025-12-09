@@ -79,17 +79,11 @@ export default function Chat() {
 
   const ratingMutation = useMutation({
     mutationFn: async ({ isPositive, reason }: { isPositive: boolean; reason?: string }) => {
-      return await apiRequest("/api/ratings", {
-        method: "POST",
-        body: JSON.stringify({
-          raterUserId: "me",
-          ratedUserId: partnerId,
-          isPositive,
-          reason,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
+      return await apiRequest("POST", "/api/ratings", {
+        raterUserId: "me",
+        ratedUserId: partnerId,
+        isPositive,
+        reason,
       });
     },
     onSuccess: (_, variables) => {

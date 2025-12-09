@@ -37,17 +37,11 @@ export default function Messages() {
       const partner = getPartner(showGrading!);
       if (!partner) throw new Error("Partner not found");
 
-      return await apiRequest("/api/ratings", {
-        method: "POST",
-        body: JSON.stringify({
-          raterUserId: "me",
-          ratedUserId: partner.id,
-          isPositive,
-          reason,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
+      return await apiRequest("POST", "/api/ratings", {
+        raterUserId: "me",
+        ratedUserId: partner.id,
+        isPositive,
+        reason,
       });
     },
     onSuccess: (_, variables) => {
