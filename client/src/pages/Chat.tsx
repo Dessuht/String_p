@@ -8,6 +8,7 @@ import { MOCK_USERS, MOCK_MESSAGES, Message } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 import { ConnectionKnot } from "@/components/ConnectionKnot";
 import { GradingModal } from "@/components/GradingModal";
+import { StarRating } from "@/components/StarRating";
 
 export default function Chat() {
   const [, params] = useRoute("/chat/:id");
@@ -79,12 +80,12 @@ export default function Chat() {
       {/* Header */}
       <header className="bg-white/50 backdrop-blur-md sticky top-0 z-10 border-b">
         <div className="flex items-center gap-3 p-4">
-          <Button variant="ghost" size="icon" onClick={() => setLocation("/messages")}>
+          <Button variant="ghost" size="icon" onClick={() => setLocation("/messages")} data-testid="button-back-to-messages">
             <ArrowLeft className="w-6 h-6" />
           </Button>
           
           <div 
-            className="flex items-center gap-3 flex-1 cursor-pointer"
+            className="flex items-center gap-3 flex-1 cursor-pointer min-w-0"
             onClick={() => setLocation(`/user/${partnerId}`)}
           >
             <Avatar className="w-10 h-10 border border-primary/20">
@@ -99,6 +100,13 @@ export default function Chat() {
               <p className="text-xs text-muted-foreground truncate">Active now</p>
             </div>
           </div>
+
+          <StarRating 
+            rating={partner.starRating} 
+            totalRatings={partner.totalRatingsReceived}
+            size="sm"
+            className="shrink-0"
+          />
         </div>
 
         {/* The Connection Knot Progress Bar */}

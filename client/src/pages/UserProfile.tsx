@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, ShieldCheck, MapPin, Star, Heart, X } from "lucide-react";
+import { ArrowLeft, ShieldCheck, MapPin, Heart, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MOCK_USERS } from "@/lib/mockData";
 import { Badge } from "@/components/ui/badge";
+import { StarRating } from "@/components/StarRating";
 
 export default function UserProfile() {
   const [, params] = useRoute("/user/:id");
@@ -44,16 +45,15 @@ export default function UserProfile() {
             </div>
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <MapPin className="w-4 h-4" />
-              <span>5 miles away</span>
+              <span>{Math.round(user.distance / 1609)} miles away</span>
             </div>
           </div>
           
-          <div className="flex flex-col items-center gap-1 bg-card/80 backdrop-blur-sm p-3 rounded-2xl border shadow-sm">
-            <div className="flex text-yellow-500">
-              <Star className="w-5 h-5 fill-current" />
-            </div>
-            <span className="font-bold text-lg">4.8</span>
-          </div>
+          <StarRating 
+            rating={user.starRating} 
+            totalRatings={user.totalRatingsReceived}
+            size="lg"
+          />
         </div>
 
         {/* Bio */}
